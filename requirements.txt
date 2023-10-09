@@ -1,0 +1,9 @@
+transformers
+langchain
+chromadb
+pdfminer.six
+instructorembedding
+sentence-transformers
+accelerate
+optimum
+llama_cpp_python
