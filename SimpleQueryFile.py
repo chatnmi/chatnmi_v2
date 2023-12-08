@@ -4,6 +4,7 @@ import warnings
 import logging
 import shutil
 import os
+import re
 from LoadModels import *
 from langchain.document_loaders import TextLoader, PDFMinerLoader, CSVLoader
 from langchain.embeddings import HuggingFaceInstructEmbeddings
@@ -20,6 +21,14 @@ HF_EMBEDDINGS_HELPER_MODEL = "hkunlp/instructor-large"
 ROOT_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 PERSIST_DIRECTORY = f"{ROOT_DIRECTORY}/DB"
 
+def clean_text(document):
+    text = document.page_content
+    text = re.sub(r'[^\w\s]', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    text = text.replace('\n', '')
+    text = text.strip()
+    document.page_content =  text
+    return document
 
 def print_header():
     Common.printHeader("Abominable Intelligence v2: Chronicles of the Cogitator (Module 2 - Scribe of the Omnissiah)",
@@ -28,7 +37,6 @@ def print_header():
                        str(__version__),
                        """The path to the Omnissiah's wisdom is no easy journey. Prepare for the data warp storm, ensure your machine is equipped with a CPU pulsating with 48GB of RAM, or a GPU glowing with 16GB vRAM to withstand the onslaught of information. The weak and wanting, lacking these offerings, risk straying off the path, their cries lost in the data-less void. Much like the battlefield, those ill-equipped are left behind. Invoke the sacred RAM, fortify your machines, and prepare to unlock the Omnissiah's wisdom. Those relying on lesser armaments are akin to a Guardsman facing a daemon of the warp, likely to be consumed by the overwhelming darkness.\n""")
 
-
 def print_models_list():
     i = 0
     print("\n----------------------------------------------------------------------------------------------------")
@@ -36,7 +44,6 @@ def print_models_list():
         print(WHITE(f"{i}. {model_id} - {model_desc}"))
         i += 1
     print("----------------------------------------------------------------------------------------------------\n\n")
-
 
 def load_documents(files):  # -> List[Document]:
     documents = []
@@ -57,7 +64,6 @@ def load_documents(files):  # -> List[Document]:
             print(GREEN(" - " + file_path + " - file extension was not recognized."))
     return documents
 
-
 def load_embeddings(device):
     print("Loading embeddings")
     embeddings_path = snapshot_download(repo_id=HF_EMBEDDINGS_HELPER_MODEL, cache_dir=MODEL_DIR, resume_download=True)
@@ -65,12 +71,13 @@ def load_embeddings(device):
                                                model_kwargs={"device": device})
     return embeddings
 
-
 def build_database(documents, embeddings):
     print("Building the database")
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     texts = text_splitter.split_documents(documents)
     print(f"Split into {len(texts)} chunks of text")
+
+    cleaned_texts = [clean_text(text) for text in texts]
 
     CHROMA_SETTINGS = Settings(
         anonymized_telemetry=False,
@@ -78,12 +85,11 @@ def build_database(documents, embeddings):
     )
 
     Chroma.from_documents(
-        texts,
+        cleaned_texts,
         embeddings,
         persist_directory=PERSIST_DIRECTORY,
         client_settings=CHROMA_SETTINGS,
     )
-
 
 def run_query(local_llm, embeddings):
     print("Running query prompt")
@@ -115,11 +121,9 @@ def run_query(local_llm, embeddings):
         print(YELLOW("\n> Source:"))
         print(source_string)
 
-
 def remove_vector_db(path: str):
     if os.path.exists(path):
         shutil.rmtree(path)
-
 
 def main():
     print_header()
@@ -150,5 +154,5 @@ def main():
 if __name__ == "__main__":
     warnings.filterwarnings("ignore",
                             message="You have modified the pretrained model configuration to control generation.")
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARNING)
     main()
