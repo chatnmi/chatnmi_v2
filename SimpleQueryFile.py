@@ -87,7 +87,11 @@ def build_database(documents, embeddings):
 
 def run_query(local_llm, embeddings):
     print("Running query prompt")
-    db = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings)
+    CHROMA_SETTINGS = Settings(
+        anonymized_telemetry=False,
+        is_persistent=True,
+    )
+    db = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings, client_settings=CHROMA_SETTINGS)
     retriever = db.as_retriever()
 
     qa = RetrievalQA.from_chain_type(llm=local_llm, chain_type="stuff", retriever=retriever,
