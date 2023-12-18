@@ -12,6 +12,12 @@ models = [
      "It is GGUF format model files for Mistral AI's Mistral 7B Instruct v0.1."],
     ["TheBloke/vicuna-13B-v1.5-GPTQ", "model.safetensors", "GPTQ",
      "It is GPTQ model files for lmsys's Vicuna 13B v1.5."],
+    ["TheBloke/Llama-2-7b-Chat-GPTQ", "model.safetensors", "GPTQ",
+     "GPTQ model files for Meta Llama 2's"],
+    ["TheBloke/Orca-2-7B-GPTQ", "model.safetensors", "GPTQ",
+     "GPTQ model files for Microsoft's Orca 2 7B"],
+    ["mistralai/Mixtral-8x7B-v0.1", "", "GPTQ",
+     "The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts."]
 ]
 
 
