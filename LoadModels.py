@@ -1,8 +1,10 @@
-from Common import *
-from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM, pipeline, GenerationConfig
+from awq import AutoAWQForCausalLM
+from huggingface_hub import snapshot_download, hf_hub_download
 from langchain.llms import HuggingFacePipeline
 from langchain.llms import LlamaCpp
-from huggingface_hub import snapshot_download, hf_hub_download
+from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM, pipeline, GenerationConfig
+
+from Common import *
 
 # [model_id, model_file, model_type, model_desc]
 models = [
@@ -16,8 +18,10 @@ models = [
      "GPTQ model files for Meta Llama 2's"],
     ["TheBloke/Orca-2-7B-GPTQ", "model.safetensors", "GPTQ",
      "GPTQ model files for Microsoft's Orca 2 7B"],
-    ["mistralai/Mixtral-8x7B-v0.1", "", "GPTQ",
-     "The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts."]
+    ["TheBloke/Mixtral-8x7B-v0.1-GGUF", "mixtral-8x7b-v0.1.Q2_K.gguf", "GGUF",
+     "The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts."],
+    ["TheBloke/llama2_7b_chat_uncensored-AWQ", "", "AWQ",
+     "Fine-tuned Llama-2 7B with an uncensored/unfiltered Wizard-Vicuna conversation dataset"]
 ]
 
 
@@ -67,6 +71,18 @@ def load_gguf_model(device_type, model_path):
         return None, None
 
 
+def load_awq_model(device_type, model_path):
+    device_map = "" if device_type == "cpu" else "auto"
+    tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=MODEL_DIR, low_cpu_mem_usage=True,
+                                              device_map=device_type)
+
+    model = AutoAWQForCausalLM.from_quantized(model_path, cache_dir=MODEL_DIR, fuse_layers=True,
+                                              device_map=device_map)
+    if device_type == "cuda":
+        model = model.to("cuda")
+    return model, tokenizer
+
+
 def download_model(model_id, model_file=""):
     if model_file == "":
         return snapshot_download(repo_id=model_id, cache_dir=MODEL_DIR, resume_download=True)
@@ -85,6 +101,8 @@ def load_model(model_type, device_type, model_id, model_file=""):
             model, tokenizer = load_gptq_model(device_type, model_id, model_file)
         case "GGUF":
             return load_gguf_model(device_type, model_path)
+        case "AWQ":
+            model, tokenizer = load_awq_model(device_type, model_id)
         case _:
             print(GREEN(f"Model loader not found for type: {model_type}"))
             return None
