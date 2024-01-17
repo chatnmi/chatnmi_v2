@@ -16,3 +16,9 @@ The torch library is required for CUDA. Make sure that the correct version is in
 To run Mixtral model, the special version of llama-cpp is required.
 https://medium.com/@piyushbatra1999/installing-llama-cpp-python-with-nvidia-gpu-acceleration-on-windows-a-short-guide-0dfac475002d
 https://pypi.org/project/llama-cpp-python/
+
+## Components
+- **SimpleQueryFile.py** - Abominable Intelligence: Chronicles of the Cogitator (Module 2 - Scribe of the Omnissiah). A script designed for dialoguing with files using a local AI model.
+- **simple_workflow.py** - Simple script presenting a workflow for RAG.
+
+  
